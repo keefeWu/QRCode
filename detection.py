@@ -1,6 +1,7 @@
 #coding:utf-8
 import cv2
 import numpy as np
+import math
 def show(img, name = 'img'):
     maxHeight = 540
     maxWidth = 960
@@ -166,42 +167,37 @@ def getCenterOfMass(contours):
         pointList.append([centreOfMassX, centreOfMassY])
     return pointList
 
+def lineAngle(line1, line2):
+    return math.acos((line1[0] * line2[0] + line1[1] * line2[1]) / 
+       (np.linalg.norm(line1, axis = 0) * np.linalg.norm(line2, axis = 0)))
+
 def selectPatterns(pointList):
-    distanceList = np.zeros(shape=(len(pointList), len(pointList)))
+    lineList = []
     for i in range(len(pointList)):
         for j in range(i, len(pointList)):
-            if i == j:
-                continue
-            distanceList[i][j] = (pointList[i][0] - pointList[j][0]) * (pointList[i][0] - pointList[j][0]) + \
-                (pointList[i][1] - pointList[j][1]) * (pointList[i][1] - pointList[j][1])
-    minDistance = -1
-    id1 = -1
-    id2 = -1
-    id3 = -1
-    for i in range(len(pointList) - 1):
-        for j in range(i + 1, len(pointList)):
-            if minDistance == -1:
-                minDistance = distanceList[i][j]
-                id1 = i
-            if minDistance > distanceList[i][j]:
-                minDistance = distanceList[i][j]
-                id1 = i
-                id2 = j
-    i = id1
-    minDistance = -1
-    for j in range(0, len(pointList)):
-        if j == i:
-            continue
-        if j == id2:
-            continue
-        if minDistance == -1:
-            minDistance = distanceList[i][j]
-            id3 = j
-        if minDistance > distanceList[i][j]:
-            minDistance = distanceList[i][j]
-            id3 = j
-    # print(distanceList, id1, id2, id3)
-    return id1, id2, id3
+            lineList.append([i, j])
+    finalLineList = []
+    finalResult = None
+    minLengthDiff = -1
+    for i in range(len(lineList)):
+        for j in range(i, len(lineList)):
+            line1 = np.array([pointList[lineList[i][0]][0] -  pointList[lineList[i][1]][0], 
+                pointList[lineList[i][0]][1] -  pointList[lineList[i][1]][1]])
+            line2 = np.array([pointList[lineList[j][0]][0] -  pointList[lineList[j][1]][0], 
+                pointList[lineList[j][0]][1] -  pointList[lineList[j][1]][1]])
+            pointIdxList = np.array([lineList[i][0], lineList[i][1], lineList[j][0], lineList[j][1]])
+            pointIdxList = np.unique(pointIdxList)
+            # print('****')
+            if len(pointIdxList) == 3:
+                theta = lineAngle(line1, line2)
+                if abs(math.pi / 2 - theta) < math.pi / 6:
+                    lengthDiff = abs(np.linalg.norm(line1, axis = 0) - np.linalg.norm(line2, axis = 0))
+                    if  lengthDiff < minLengthDiff or minLengthDiff < 0:
+                        minLengthDiff = abs(np.linalg.norm(line1, axis = 0) - np.linalg.norm(line2, axis = 0))
+                        finalResult = pointIdxList
+
+    
+    return finalResult
 
 def main():
     path = 'data/1.png'
@@ -221,6 +217,7 @@ def main():
     interstingPatternList = []
     if len(patterns) < 3 :
         print('no enough pattern')
+        return False, []
         # return False
 
     elif len(patterns) == 3:
@@ -260,11 +257,15 @@ def main():
 
     id1, id2, id3 = 0, 1, 2
     if len(patterns) > 3:
-        id1, id2, id3 = selectPatterns(centerOfMassList)
+        result = selectPatterns(centerOfMassList)
+        if result is None:
+            print('no correct pattern')
+            return False, []
+        id1, id2, id3 = result
     interstingPatternList = np.array(interstingPatternList)[[id1, id2, id3]]
     centerOfMassList = np.array(centerOfMassList)[[id1, id2, id3]]
-    getOrientation(interstingPatternList, centerOfMassList)
-
+    pointList = getOrientation(interstingPatternList, centerOfMassList)
+    return True, pointList
     # contours
 
 main()
