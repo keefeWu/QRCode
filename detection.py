@@ -13,13 +13,7 @@ def show(img, name = 'img'):
     cv2.imshow(name,img)
     cv2.waitKey(0)
 
-class Quad(object):
-    def __init__(self, topLeftPoint=None, topRightPoint=None, bottomRightPoint=None, bottomLeftPoint=None):
-        self.tl = topLeftPoint
-        self.tr = topRightPoint
-        self.br = bottomRightPoint
-        self.bl = bottomLeftPoint
- 
+
 
 def convert_img_to_binary(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -47,8 +41,8 @@ def checkRatioOfContours(index, contours, hierarchy):
         cv2.contourArea(contours[firstChildIndex]) + 1e-5)
     secondArea = cv2.contourArea(contours[firstChildIndex]) / (
         cv2.contourArea(contours[secondChildIndex]) + 1e-5)
-    return ((firstArea / secondArea) > 1 and \
-            ((firstArea / secondArea) < 10))
+    return ((firstArea / (secondArea+ 1e-5)) > 1 and \
+            ((firstArea / (secondArea+ 1e-5)) < 10))
 
 def isPossibleCorner(contourIndex, levelsNum, contours, hierarchy):
     # if no chirld, return -1
@@ -250,11 +244,12 @@ def main():
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
             interstingPatternList.append(contours[intrestingPatternId])
         show(img, 'qrcode')
+    img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
+    # cv2.drawContours(img_show, interstingPatternList, -1, (0,255,0), 3)
     centerOfMassList = getCenterOfMass(interstingPatternList)
     for centerOfMass in centerOfMassList:
-        cv2.circle(img, tuple(centerOfMass), 3, (0, 255, 0))
+        cv2.circle(img_show, tuple(centerOfMass), 3, (0, 255, 0))
     show(img, 'qrcode')
-
     id1, id2, id3 = 0, 1, 2
     if len(patterns) > 3:
         result = selectPatterns(centerOfMassList)
