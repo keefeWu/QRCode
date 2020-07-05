@@ -29,7 +29,9 @@ def convert_img_to_binary(img):
 
 def getContours(img):
     binary_img = convert_img_to_binary(img)
+    # thresholdImage = binary_img
     thresholdImage = cv2.Canny(binary_img, 100, 200) #Edges by canny edge detection
+    
     _, contours, hierarchy = cv2.findContours(
             thresholdImage, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     return thresholdImage, contours, hierarchy
@@ -194,15 +196,20 @@ def selectPatterns(pointList):
     return finalResult
 
 def main():
-    path = 'data/1.png'
+    path = 'data/1.jpg'
     img = cv2.imread(path)
+    show(img)
     thresholdImage, contours, hierarchy = getContours(img)
-    show(thresholdImage)
+    img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
+    cv2.drawContours(img_show, contours, -1, (0,255,0), 3)
+    show(img_show)
 
     # qrcode corner has 3 levels
     levelsNum = 3
     patterns, patternsIndices = getContourWithinLevel(levelsNum, contours, hierarchy)
-
+    img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
+    cv2.drawContours(img_show, patterns, -1, (0,255,0), 3)
+    show(img_show)
     #in case not all the picture has clear pattern
     while len(patterns) < 3 and levelsNum > 0:
         levelsNum -= 1
@@ -238,18 +245,18 @@ def main():
                 # We can make sure the parent must appear before chirld because we sorted the list by area
                 if not isParentInList(intrestingPatternIdList, index, hierarchy):
                     intrestingPatternIdList.append(index)
-
+        img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
         for intrestingPatternId in intrestingPatternIdList:
             x, y, w, h = cv2.boundingRect(contours[intrestingPatternId])
-            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+            cv2.rectangle(img_show, (x, y), (x + w, y + h), (0, 255, 0), 2)
             interstingPatternList.append(contours[intrestingPatternId])
-        show(img, 'qrcode')
+        show(img_show, 'qrcode')
     img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
     # cv2.drawContours(img_show, interstingPatternList, -1, (0,255,0), 3)
     centerOfMassList = getCenterOfMass(interstingPatternList)
     for centerOfMass in centerOfMassList:
         cv2.circle(img_show, tuple(centerOfMass), 3, (0, 255, 0))
-    show(img, 'qrcode')
+    show(img_show, 'qrcode')
     id1, id2, id3 = 0, 1, 2
     if len(patterns) > 3:
         result = selectPatterns(centerOfMassList)
@@ -260,6 +267,13 @@ def main():
     interstingPatternList = np.array(interstingPatternList)[[id1, id2, id3]]
     centerOfMassList = np.array(centerOfMassList)[[id1, id2, id3]]
     pointList = getOrientation(interstingPatternList, centerOfMassList)
+    img_show = img.copy()
+    for point in pointList:
+        cv2.circle(img_show, tuple([int(point[0]), int(point[1])]), 10, (0, 255, 0), -1)
+    # cv2.imwrite('/home/jiangzhiqi/Documents/blog/keefeWu.github.io/source/_posts/opencv实现二维码检测/result.jpg', img_show)
+    point = pointList[0]
+    cv2.circle(img_show, tuple([int(point[0]), int(point[1])]), 10, (0, 0, 255), -1)
+    show(img_show)
     return True, pointList
     # contours
 
