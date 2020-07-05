@@ -12,7 +12,7 @@ def show(img, name = 'img'):
         img = cv2.resize(img,(0,0),fx=scale, fy=scale)
     cv2.imshow(name,img)
     cv2.waitKey(0)
-
+    cv2.destroyWindow(name)
 
 
 def convert_img_to_binary(img):
@@ -29,6 +29,8 @@ def convert_img_to_binary(img):
 
 def getContours(img):
     binary_img = convert_img_to_binary(img)
+    kernel = np.ones((5, 5), np.uint8)
+    binary_img = cv2.erode(binary_img, kernel)
     # thresholdImage = binary_img
     thresholdImage = cv2.Canny(binary_img, 100, 200) #Edges by canny edge detection
     
@@ -196,7 +198,7 @@ def selectPatterns(pointList):
     return finalResult
 
 def main():
-    path = 'data/1.jpg'
+    path = 'data/2.jpg'
 
     img = cv2.imread(path)
     show(img)
@@ -204,6 +206,13 @@ def main():
     img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
     cv2.drawContours(img_show, contours, -1, (0,255,0), 3)
     show(img_show)
+
+
+    # img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
+    # # cv2.drawContours(img_show, contours[areaIdList[-9]], -1, (0,255,0), 3)
+    # cv2.drawContours(img_show, contours[2423], -1, (0,255,0), 3)
+    # show(img_show)
+
 
     # qrcode corner has 3 levels
     levelsNum = 3
