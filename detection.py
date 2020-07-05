@@ -197,6 +197,7 @@ def selectPatterns(pointList):
 
 def main():
     path = 'data/1.jpg'
+
     img = cv2.imread(path)
     show(img)
     thresholdImage, contours, hierarchy = getContours(img)
@@ -248,11 +249,14 @@ def main():
         img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
         for intrestingPatternId in intrestingPatternIdList:
             x, y, w, h = cv2.boundingRect(contours[intrestingPatternId])
+
             cv2.rectangle(img_show, (x, y), (x + w, y + h), (0, 255, 0), 2)
             interstingPatternList.append(contours[intrestingPatternId])
         show(img_show, 'qrcode')
+
     img_show = cv2.cvtColor(thresholdImage, cv2.COLOR_GRAY2BGR)
     # cv2.drawContours(img_show, interstingPatternList, -1, (0,255,0), 3)
+    # cv2.imwrite('/home/jiangzhiqi/Documents/blog/keefeWu.github.io/source/_posts/opencv实现二维码检测/contours3.jpg', img_show)
     centerOfMassList = getCenterOfMass(interstingPatternList)
     for centerOfMass in centerOfMassList:
         cv2.circle(img_show, tuple(centerOfMass), 3, (0, 255, 0))
@@ -273,6 +277,7 @@ def main():
     # cv2.imwrite('/home/jiangzhiqi/Documents/blog/keefeWu.github.io/source/_posts/opencv实现二维码检测/result.jpg', img_show)
     point = pointList[0]
     cv2.circle(img_show, tuple([int(point[0]), int(point[1])]), 10, (0, 0, 255), -1)
+
     show(img_show)
     return True, pointList
     # contours
